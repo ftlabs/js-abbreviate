@@ -1,0 +1,5 @@
+{
+	"name": "js-abbreviate",
+	"version": "0.0.1",
+	"description": "Create simplified JSON-serializable copies of arbitrary JS objects"
+}
