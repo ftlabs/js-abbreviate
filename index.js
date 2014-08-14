@@ -2,6 +2,10 @@
 
 var util = require('util');
 
+
+/** @const */
+var STRING_MAX_LENGTH = 128*1024;
+
 /**
  * Create a copy of any object without non-serializable elements to make result safe for JSON.stringify().
  * Guaranteed to never throw.
@@ -14,14 +18,33 @@ var util = require('util');
  * (may return undefined to remove unwanted keys). See nodeFilter and browserFilter.
  *
  * depth: maximum recursion depth. Elements deeper than that are stringified with util.inspect()
+ *
+ * maxSize: roughly maximum allowed size of data after JSON serialisation (but it's not guaranteed that it won't exceed the limit)
  */
 function abbreviate(obj, options) {
-	if (!options) options = {}
+	if (!options) options = {};
 
-	return abbreviateRecursive(obj, options.filter || function(k,v){return v}, options.depth || 10);
+	var filter = options.filter || function(k,v){return v;};
+	var maxDepth = options.depth || 10;
+	var maxSize = options.maxSize || 1*1024*1024;
+
+	return abbreviateRecursive(obj, filter, {sizeLeft: maxSize}, maxDepth);
 }
 
-function abbreviateRecursive(obj, filter, maxDepth) {
+function limitStringLength(str) {
+	if (str.length > STRING_MAX_LENGTH) {
+		return str.substring(0, STRING_MAX_LENGTH/2) + ' … ' + str.substring(str.length - STRING_MAX_LENGTH/2);
+	}
+	return str;
+}
+
+function abbreviateRecursive(obj, filter, state, maxDepth) {
+	if (state.sizeLeft < 0) {
+		return '**skipped**';
+	}
+
+	state.sizeLeft -= 5; // rough approximation of JSON overhead
+
 	try {
 		switch(typeof obj) {
 			case 'object':
@@ -34,12 +57,17 @@ function abbreviateRecursive(obj, filter, maxDepth) {
 
 				var newobj = Array.isArray(obj) ? [] : {};
 				for(var i in obj) {
-					newobj[i] = abbreviateRecursive(filter(i, obj[i]), filter, maxDepth-1);
+					newobj[i] = abbreviateRecursive(filter(i, obj[i]), filter, state, maxDepth-1);
+					if (state.sizeLeft < 0) break;
 				}
 				return newobj;
 
-			case 'number':
 			case 'string':
+				obj = limitStringLength(obj);
+				state.sizeLeft -= obj.length;
+				return obj;
+
+			case 'number':
 			case 'boolean':
 			case 'undefined':
 				return obj;
@@ -47,7 +75,9 @@ function abbreviateRecursive(obj, filter, maxDepth) {
 	} catch(e) {/* fall back to inspect*/}
 
 	try {
-		return util.inspect(obj, {depth: 1});
+		obj = limitStringLength(util.inspect(obj, {depth: 1}));
+		state.sizeLeft -= obj.length;
+		return obj;
 	} catch(e) {
 		return "**non-serializable**";
 	}

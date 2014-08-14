@@ -31,4 +31,34 @@ suite("abbr", function(){
 		})),
 		'{"global":"**global**"}');
 	});
+
+	test('maxStringLength', function(){
+		var source = {
+			long: 'begin' + new Array(30000).join('banana') + 'end',
+		};
+		var result = abbr.abbreviate(source);
+
+		assert(source.long.length > 132000, 'long input');
+		assert(result.long.length < 132000, 'short output');
+		assert(result.long.indexOf('begin') != -1, 'keep begin');
+		assert(result.long.indexOf('end') != -1, 'keep end');
+		assert(result.long.indexOf('…') != -1, 'mark break');
+	});
+
+	test('maxStringTotalSize', function(){
+		var longStrings = [
+			[ new Array(10000).join('banana') ],
+			{ obj: new Array(10000).join('banana') },
+			new Array(10000).join('banana'),
+		];
+
+		// maxSize is very rough, so allow some difference
+		assert(JSON.stringify(abbr.abbreviate(longStrings, {maxSize: 50000})).length < 65000);
+	});
+
+	test('maxOverheadSize', function(){
+		var result = abbr.abbreviate(new Array(1000).join('abcd').split(''), {maxSize: 4000});
+
+		assert(JSON.stringify(result).length < 4000, 'len' + JSON.stringify(result).length);
+	});
 });
