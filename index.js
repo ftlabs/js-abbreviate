@@ -83,10 +83,35 @@ function abbreviateRecursive(obj, filter, state, maxDepth) {
 	}
 }
 
-
-function nodeFilter(key, val) {
+function commonFilter(key, val) {
 	if ('function' === typeof val) {
 		return undefined;
+	}
+
+	if (val instanceof Date) {
+		return "**Date** " + val;
+	}
+
+	if (val instanceof Error) {
+		var err = {
+			// These properties are implemented as magical getters and don't show up in for in
+			stack: val.stack,
+			message: val.message,
+			name: val.name,
+		};
+		for(var i in val) {
+			err[i] = val[i];
+		}
+		return err;
+	}
+
+	return val;
+}
+
+function nodeFilter(key, val) {
+	var newVal = commonFilter(key, val);
+	if (newVal !== val) {
+		return newVal;
 	}
 
 	// domain objects are huge and have circular references
@@ -101,16 +126,13 @@ function nodeFilter(key, val) {
 		return "**global**";
 	}
 
-	if (val instanceof Date) {
-		return "**Date** " + val;
-	}
-
 	return val;
 }
 
 function browserFilter(key, val) {
-	if ('function' === typeof val) {
-		return undefined;
+	var newVal = commonFilter(key, val);
+	if (newVal !== val) {
+		return newVal;
 	}
 
 	if (val === window) {
@@ -119,10 +141,6 @@ function browserFilter(key, val) {
 
 	if (val === document) {
 		return "**document**";
-	}
-
-	if (val instanceof Date) {
-		return "**Date** " + val;
 	}
 
 	if (val instanceof HTMLElement) {
