@@ -28,7 +28,7 @@ function abbreviate(obj, options) {
 	var maxDepth = options.depth || 10;
 	var maxSize = options.maxSize || 1*1024*1024;
 
-	return abbreviateRecursive(obj, filter, {sizeLeft: maxSize}, maxDepth);
+	return abbreviateRecursive(undefined, obj, filter, {sizeLeft: maxSize}, maxDepth);
 }
 
 function limitStringLength(str) {
@@ -38,12 +38,14 @@ function limitStringLength(str) {
 	return str;
 }
 
-function abbreviateRecursive(obj, filter, state, maxDepth) {
+function abbreviateRecursive(key, obj, filter, state, maxDepth) {
 	if (state.sizeLeft < 0) {
 		return '**skipped**';
 	}
 
 	state.sizeLeft -= 5; // rough approximation of JSON overhead
+
+	obj = filter(key, obj);
 
 	try {
 		switch(typeof obj) {
@@ -51,13 +53,14 @@ function abbreviateRecursive(obj, filter, state, maxDepth) {
 				if (null === obj) {
 					return null;
 				}
+
 				if (maxDepth < 0) {
 					break; // fall back to util.inspect
 				}
 
 				var newobj = Array.isArray(obj) ? [] : {};
 				for(var i in obj) {
-					newobj[i] = abbreviateRecursive(filter(i, obj[i]), filter, state, maxDepth-1);
+					newobj[i] = abbreviateRecursive(i, obj[i], filter, state, maxDepth-1);
 					if (state.sizeLeft < 0) break;
 				}
 				return newobj;

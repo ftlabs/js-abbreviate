@@ -72,4 +72,14 @@ suite("abbr", function(){
 		assert.equal(result.prop.message, "Hello");
 		assert(/testFunctionName/.test(result.prop.stack));
 	});
+
+	test('topLevelFilter', function(){
+		var custom = Error("Custom");
+		custom.customProperty = "added";
+		var result = abbr.abbreviate(custom, {filter: abbr.nodeFilter});
+
+		assert.equal(result.name, "Error");
+		assert.equal(result.message, "Custom");
+		assert.equal(result.customProperty, "added");
+	});
 });
