@@ -1,4 +1,5 @@
 'use strict';
+/*global test,suite*/
 
 var abbr = require('../index');
 var assert = require('assert');
@@ -60,5 +61,25 @@ suite("abbr", function(){
 		var result = abbr.abbreviate(new Array(1000).join('abcd').split(''), {maxSize: 4000});
 
 		assert(JSON.stringify(result).length < 4000, 'len' + JSON.stringify(result).length);
+	});
+
+	test('errorProperties', function testFunctionName(){
+		var result = abbr.abbreviate({
+			prop: new TypeError("Hello")
+		}, {filter: abbr.nodeFilter});
+
+		assert.equal(result.prop.name, "TypeError");
+		assert.equal(result.prop.message, "Hello");
+		assert(/testFunctionName/.test(result.prop.stack));
+	});
+
+	test('topLevelFilter', function(){
+		var custom = Error("Custom");
+		custom.customProperty = "added";
+		var result = abbr.abbreviate(custom, {filter: abbr.nodeFilter});
+
+		assert.equal(result.name, "Error");
+		assert.equal(result.message, "Custom");
+		assert.equal(result.customProperty, "added");
 	});
 });
