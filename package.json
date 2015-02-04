@@ -1,8 +1,11 @@
 {
-	"name": "js-abbreviate",
-	"version": "0.1.0",
-	"scripts": {
-		"test": "mocha"
-	},
-	"description": "Create simplified JSON-serializable copies of arbitrary JS objects"
+  "name": "js-abbreviate",
+  "version": "0.1.0",
+  "scripts": {
+    "test": "mocha"
+  },
+  "description": "Create simplified JSON-serializable copies of arbitrary JS objects",
+  "devDependencies": {
+    "mocha": "^2.1.0"
+  }
 }
