@@ -112,10 +112,6 @@ function commonFilter(key, val) {
 }
 
 function nodeFilter(key, val) {
-	var newVal = commonFilter(key, val);
-	if (newVal !== val) {
-		return newVal;
-	}
 
 	// domain objects are huge and have circular references
 	if (key === 'domain' && 'object' === typeof val && val._events) {
@@ -129,15 +125,10 @@ function nodeFilter(key, val) {
 		return "**global**";
 	}
 
-	return val;
+	return commonFilter(key, val);
 }
 
 function browserFilter(key, val) {
-	var newVal = commonFilter(key, val);
-	if (newVal !== val) {
-		return newVal;
-	}
-
 	if (val === window) {
 		return "**window**";
 	}
@@ -153,7 +144,7 @@ function browserFilter(key, val) {
 		}
 	}
 
-	return val;
+	return commonFilter(key, val);
 }
 
 
