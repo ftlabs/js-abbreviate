@@ -1,8 +1,5 @@
 'use strict';
 
-var util = require('util');
-
-
 /** @const */
 var STRING_MAX_LENGTH = 128*1024;
 
@@ -55,7 +52,7 @@ function abbreviateRecursive(key, obj, filter, state, maxDepth) {
 				}
 
 				if (maxDepth < 0) {
-					break; // fall back to util.inspect
+					break; // fall back to stringification
 				}
 
 				var newobj = Array.isArray(obj) ? [] : {};
@@ -78,7 +75,7 @@ function abbreviateRecursive(key, obj, filter, state, maxDepth) {
 	} catch(e) {/* fall back to inspect*/}
 
 	try {
-		obj = limitStringLength(util.inspect(obj, {depth: 1}));
+		obj = limitStringLength('' + obj);
 		state.sizeLeft -= obj.length;
 		return obj;
 	} catch(e) {
